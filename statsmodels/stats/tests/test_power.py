@@ -1018,3 +1018,32 @@ def test_normal_sample_size_one_tail():
     nobs_with_zeros = smp.normal_sample_size_one_tail(5, powers, alphas, 2, 2)
     # check_nans = np.isnan(zero_mask) == np.isnan(nobs_with_nans)
     assert_array_equal(nobs_with_zeros[powers <= alphas], 0)
+
+
+def test_normal_mde_one_tail():
+    # Round trip: the minimum detectable effect at the sample size returned
+    # by normal_sample_size_one_tail is the effect the sizing started from.
+    nobs = smp.normal_sample_size_one_tail(0.5, 0.8, 0.05, 2, std_alternative=3)
+    mde = smp.normal_mde_one_tail(nobs, 0.8, 0.05, 2, std_alternative=3)
+    assert_allclose(mde, 0.5, rtol=1e-13)
+
+    # Round trip through the power computation: the returned effect reaches
+    # the requested power in the relevant tail.
+    power = smp.normal_power_het(
+        mde, nobs, 0.05, std_null=2, std_alternative=3, alternative="larger"
+    )
+    assert_allclose(power, 0.8, rtol=1e-13)
+
+    # Default std_alternative=None falls back to std_null.
+    assert_allclose(
+        smp.normal_mde_one_tail(50, 0.8, 0.05, 2, std_alternative=None),
+        smp.normal_mde_one_tail(50, 0.8, 0.05, 2, std_alternative=2),
+        rtol=1e-13,
+    )
+
+    # Zero is returned in the elements where power <= alpha, matching
+    # normal_sample_size_one_tail.
+    alphas = np.asarray([0.01, 0.05, 0.1, 0.5, 0.8])
+    powers = np.asarray([0.99, 0.95, 0.9, 0.5, 0.2])
+    mde_with_zeros = smp.normal_mde_one_tail(5, powers, alphas, 2, 2)
+    assert_array_equal(mde_with_zeros[powers <= alphas], 0)

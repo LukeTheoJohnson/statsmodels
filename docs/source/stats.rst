@@ -463,6 +463,7 @@ equations.
    FTestPower
    normal_power_het
    normal_sample_size_one_tail
+   normal_mde_one_tail
    tt_solve_power
    tt_ind_solve_power
    zt_ind_solve_power
