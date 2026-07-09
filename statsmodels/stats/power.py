@@ -244,6 +244,62 @@ def normal_sample_size_one_tail(diff, power, alpha, std_null=1.0, std_alternativ
     return n1
 
 
+def normal_mde_one_tail(nobs, power, alpha, std_null=1.0, std_alternative=None):
+    """explicit minimum detectable effect if only one tail is relevant
+
+    The minimum detectable effect is the smallest difference in the
+    estimated means or statistics under the alternative for which the test
+    has at least the given power in one tail. This solves the sample size
+    equation of `normal_sample_size_one_tail` for the difference.
+    Use alpha/2 to compute the one tail approximation to the two-sided
+    test, i.e. consider only one tail of two-sided test.
+
+    Parameters
+    ----------
+    nobs : float or int
+        number of observations
+    power : float in interval (0,1)
+        power of the test, e.g. 0.8, is one minus the probability of a type II
+        error. Power is the probability that the test correctly rejects the
+        Null Hypothesis if the Alternative Hypothesis is true.
+    alpha : float in interval (0,1)
+        significance level, e.g. 0.05, is the probability of a type I
+        error, that is wrong rejections if the Null Hypothesis is true.
+        Note: alpha is used for one tail. Use alpha/2 for two-sided
+        alternative.
+    std_null : float
+        standard deviation under the Null hypothesis without division by
+        sqrt(nobs)
+    std_alternative : float
+        standard deviation under the Alternative hypothesis without division
+        by sqrt(nobs). Defaults to None. If None, ``std_alternative`` is set
+        to the value of ``std_null``.
+
+    Returns
+    -------
+    mde : float
+        Minimum detectable difference in the estimated means or statistics,
+        not standardized by the standard deviation.
+        If the desired power is achieved at zero difference, then ``mde``
+        will be zero. This will be the case when power <= alpha if
+        std_alternative is equal to std_null.
+
+    See Also
+    --------
+    normal_sample_size_one_tail
+    """
+
+    if std_alternative is None:
+        std_alternative = std_null
+
+    crit_power = stats.norm.isf(power)
+    crit = stats.norm.isf(alpha)
+    mde = np.maximum(crit * std_null - crit_power * std_alternative, 0) / np.sqrt(
+        nobs
+    )
+    return mde
+
+
 def ftest_anova_power(effect_size, nobs, alpha, k_groups=2, df=None):
     """power for ftest for one way anova with k equal sized groups
 
